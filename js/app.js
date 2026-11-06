@@ -135,7 +135,10 @@ function onCaps(e) {
     .then((m) => {
       const rows = m.DU_LIEU_BI_MAT;
       personalBtn.hidden = false;
-      personalBtn.onclick = () => napMau(rows);
+      personalBtn.onclick = () => {
+        personalBtn.hidden = true;
+        napMau(rows);
+      };
     })
     .catch(() => { /* không có dữ liệu cá nhân trên máy này */ });
 }
