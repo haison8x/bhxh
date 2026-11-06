@@ -1,6 +1,6 @@
 import {
   validateRows, parseSavedState, parseSalaryK, parseThang,
-  tinhLuongHuu, tinhMotLan, chiTiet, duLieuMau, laChuoiNhanh,
+  tinhLuongHuu, tinhMotLan, chiTiet, duLieuMau, laChuoiNhanh, giaiMa,
 } from './calc.js';
 import { HE_SO_NAM_AP_DUNG, HE_SO_NGUON, MUC_THAM_CHIEU } from './data.js';
 
@@ -115,8 +115,8 @@ function napMau(rows) {
   update();
 }
 
-// Nhấn Caps Lock 5 lần trong 3 giây: nếu có js/secret-data.js (chỉ có trên máy chủ dự án, đã
-// .gitignore) thì hiện nút nạp dữ liệu cá nhân; không có file thì không hiện gì.
+// Nhấn Caps Lock 5 lần trong 3 giây: hiện nút nạp dữ liệu cá nhân (đã làm rối trong js/extra.js,
+// tạo bằng "npm run extra" từ js/secret-data.js trên máy chủ dự án).
 // Đếm theo lần đổi trạng thái Caps Lock, vì Windows báo keydown + keyup mỗi lần nhấn còn macOS
 // chỉ báo keydown khi bật và keyup khi tắt.
 const personalBtn = $('#load-personal');
@@ -131,9 +131,9 @@ function onCaps(e) {
   capsTimes = [...capsTimes.filter((t) => now - t <= 3000), now];
   if (!laChuoiNhanh(capsTimes, 5, 3000)) return;
   capsTimes = [];
-  import('./secret-data.js')
+  import('./extra.js')
     .then((m) => {
-      const rows = m.DU_LIEU_BI_MAT;
+      const rows = giaiMa(m.EXTRA);
       personalBtn.hidden = false;
       personalBtn.onclick = () => {
         personalBtn.hidden = true;
