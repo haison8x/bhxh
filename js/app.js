@@ -115,6 +115,8 @@ function napMau(rows) {
   update();
 }
 
+$('#load-sample').addEventListener('click', () => napMau(duLieuMau(today())));
+
 // Nhấn Caps Lock 5 lần trong 3 giây: hiện nút nạp dữ liệu cá nhân (js/secret-data.js).
 // Đếm theo lần đổi trạng thái Caps Lock, vì Windows báo keydown + keyup mỗi lần nhấn còn macOS
 // chỉ báo keydown khi bật và keyup khi tắt.
