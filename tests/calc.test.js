@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   heSo, tyLeDong, quyDoiNam, expandMonths,
   parseSalaryK, parseThang, validateRows, parseSavedState,
-  binhQuan, thongKeDong, chiTiet, tinhLuongHuu,
+  binhQuan, thongKeDong, chiTiet, tinhLuongHuu, tinhMotLan,
 } from '../js/calc.js';
 
 test('heSo', () => {
@@ -144,4 +144,22 @@ test('pension: floor at mức tham chiếu for ≥ 20 năm', () => {
 test('pension: row order does not matter', () => {
   const a = [P(2010, 1, 2010, 12, 5000), P(2024, 1, 2038, 12, 10000)];
   assert.deepEqual(tinhLuongHuu('nam', a), tinhLuongHuu('nam', [...a].reverse()));
+});
+
+test('mot lan: straddles 2014, odd months move to post-2014', () => {
+  const r = tinhMotLan([P(2012, 7, 2015, 3, 10000)]);
+  assert.equal(r.namTruoc2014, 1); assert.equal(r.namTu2014, 2);
+  assert.equal(r.soTien, 65576923);
+});
+
+test('mot lan: under 12 months uses 22%', () => {
+  assert.equal(tinhMotLan([P(2025, 1, 2025, 6, 10000)]).soTien, 13200000);
+});
+
+test('mot lan: under 12 months capped at 2 × bình quân', () => {
+  assert.equal(tinhMotLan([P(2025, 1, 2025, 11, 10000)]).soTien, 20000000);
+});
+
+test('mot lan: exactly 12 months from 2025 = 2 × bq', () => {
+  assert.equal(tinhMotLan([P(2025, 1, 2025, 12, 10000)]).soTien, 20000000);
 });

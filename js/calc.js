@@ -189,3 +189,27 @@ export function tinhLuongHuu(gender, periods) {
     thongKe: thongKeDong(months),
   };
 }
+
+export function tinhMotLan(periods) {
+  const months = expandMonths(periods);
+  const tongThang = months.length;
+  const bq = binhQuan(months);
+  const moc = idx({ y: 2014, m: 1 });
+  const thangTruoc2014 = months.filter((e) => idx(e) < moc).length;
+  const thangTu2014 = tongThang - thangTruoc2014;
+  const namTruoc2014 = Math.floor(thangTruoc2014 / 12);
+  const namTu2014 = quyDoiNam(thangTu2014 + (thangTruoc2014 % 12));
+  const duoi12Thang = tongThang > 0 && tongThang < 12;
+  let soTien;
+  if (duoi12Thang) {
+    const tongLuong = months.reduce((s, e) => s + e.salary, 0);
+    soTien = Math.min(0.22 * tongLuong, 2 * bq);
+  } else {
+    soTien = 1.5 * bq * namTruoc2014 + 2 * bq * namTu2014;
+  }
+  return {
+    tongThang, binhQuan: Math.round(bq), thangTruoc2014, thangTu2014,
+    namTruoc2014, namTu2014, duoi12Thang, soTien: Math.round(soTien),
+    thongKe: thongKeDong(months),
+  };
+}
