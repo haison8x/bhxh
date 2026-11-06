@@ -116,3 +116,76 @@ export function parseSavedState(text) {
     .map((r) => ({ from: String(r.from ?? ''), to: String(r.to ?? ''), salary: String(r.salary ?? '') }));
   return { gender: data.gender, rows };
 }
+
+// ---------- Tính toán ----------
+
+export function binhQuan(months) {
+  if (months.length === 0) return 0;
+  const tong = months.reduce((s, e) => s + e.salary * heSo(e.y), 0);
+  return tong / months.length;
+}
+
+export function thongKeDong(months) {
+  let nld = 0;
+  let cty = 0;
+  for (const e of months) {
+    const r = tyLeDong(e.y, e.m);
+    nld += (e.salary * r.nld) / 100;
+    cty += (e.salary * r.cty) / 100;
+  }
+  return { nld: Math.round(nld), cty: Math.round(cty) };
+}
+
+export function chiTiet(periods) {
+  const rows = [];
+  const sorted = [...periods].sort((a, b) => idx(a.from) - idx(b.from));
+  for (const p of sorted) {
+    for (let y = p.from.y; y <= p.to.y; y++) {
+      const tu = y === p.from.y ? p.from : { y, m: 1 };
+      const den = y === p.to.y ? p.to : { y, m: 12 };
+      const months = expandMonths([{ from: tu, to: den, salaryK: p.salaryK }]);
+      const luong = p.salaryK * 1000;
+      const hs = heSo(y);
+      const tk = thongKeDong(months);
+      rows.push({
+        tu, den, soThang: months.length, luong, heSo: hs,
+        luongDieuChinh: Math.round(luong * hs), nld: tk.nld, cty: tk.cty,
+      });
+    }
+  }
+  return rows;
+}
+
+export function tinhLuongHuu(gender, periods) {
+  const months = expandMonths(periods);
+  const tongThang = months.length;
+  const bq = binhQuan(months);
+  const soNam = quyDoiNam(tongThang);
+  const duDieuKien = tongThang >= 180;
+  let tyLe = 0;
+  let luongHuu = 0;
+  let apSan = false;
+  let namVuot = 0;
+  let troCapMotLan = 0;
+  if (duDieuKien) {
+    if (gender === 'nu') tyLe = 45 + 2 * (soNam - 15);
+    else if (soNam >= 20) tyLe = 45 + 2 * (soNam - 20);
+    else tyLe = 40 + 1 * (soNam - 15);
+    tyLe = Math.min(tyLe, 75);
+    luongHuu = (tyLe / 100) * bq;
+    if (tongThang >= 240 && luongHuu < MUC_THAM_CHIEU) {
+      luongHuu = MUC_THAM_CHIEU;
+      apSan = true;
+    }
+    const vuot = tongThang - (gender === 'nu' ? 360 : 420);
+    if (vuot > 0) {
+      namVuot = quyDoiNam(vuot);
+      troCapMotLan = namVuot * 0.5 * bq;
+    }
+  }
+  return {
+    tongThang, binhQuan: Math.round(bq), duDieuKien, soNam, tyLe,
+    luongHuu: Math.round(luongHuu), apSan, namVuot, troCapMotLan: Math.round(troCapMotLan),
+    thongKe: thongKeDong(months),
+  };
+}

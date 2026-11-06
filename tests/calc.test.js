@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   heSo, tyLeDong, quyDoiNam, expandMonths,
   parseSalaryK, parseThang, validateRows, parseSavedState,
+  binhQuan, thongKeDong, chiTiet, tinhLuongHuu,
 } from '../js/calc.js';
 
 test('heSo', () => {
@@ -87,4 +88,60 @@ test('parseSavedState tolerates garbage', () => {
   assert.deepEqual(parseSavedState('{"gender":"x","rows":5}'), d);
   assert.deepEqual(parseSavedState('{"gender":"nu","rows":[{"from":"01/2020","to":"12/2020","salary":"10000"}]}'),
     { gender: 'nu', rows: [{ from: '01/2020', to: '12/2020', salary: '10000' }] });
+});
+
+const P = (fy, fm, ty, tm, k) => ({ from: { y: fy, m: fm }, to: { y: ty, m: tm }, salaryK: k });
+
+test('binhQuan applies coefficients', () => {
+  const m = expandMonths([P(2010, 1, 2010, 12, 5000), P(2024, 1, 2024, 12, 10000)]);
+  assert.equal(Math.round(binhQuan(m)), 10050000);
+});
+
+test('thongKeDong across 05/2017 rate change', () => {
+  assert.deepEqual(thongKeDong(expandMonths([P(2017, 5, 2017, 6, 10000)])), { cty: 3500000, nld: 1600000 });
+});
+
+test('chiTiet splits by year', () => {
+  const r = chiTiet([P(2012, 7, 2015, 3, 10000)]);
+  assert.deepEqual(r.map(x => [x.tu.y, x.tu.m, x.den.m, x.soThang, x.heSo]),
+    [[2012, 7, 12, 6, 1.51], [2013, 1, 12, 12, 1.42], [2014, 1, 12, 12, 1.36], [2015, 1, 3, 3, 1.36]]);
+});
+
+test('pension: nu 15 nam = 45%', () => {
+  const r = tinhLuongHuu('nu', [P(2025, 1, 2039, 12, 10000)]);
+  assert.equal(r.tyLe, 45); assert.equal(r.luongHuu, 4500000); assert.equal(r.apSan, false);
+});
+
+test('pension: nam 15 nam = 40%', () => {
+  assert.equal(tinhLuongHuu('nam', [P(2025, 1, 2039, 12, 10000)]).luongHuu, 4000000);
+});
+
+test('pension: nam 19y7m rounds to 20 → 45%', () => {
+  assert.equal(tinhLuongHuu('nam', [P(2025, 1, 2044, 7, 10000)]).tyLe, 45);
+});
+
+test('pension: nam 19y3m → 44.5%', () => {
+  const r = tinhLuongHuu('nam', [P(2025, 1, 2044, 3, 10000)]);
+  assert.equal(r.tyLe, 44.5); assert.equal(r.luongHuu, 4450000);
+});
+
+test('pension: nu 14y11m not eligible', () => {
+  const r = tinhLuongHuu('nu', [P(2025, 1, 2039, 11, 10000)]);
+  assert.equal(r.duDieuKien, false); assert.equal(r.luongHuu, 0);
+});
+
+test('pension: nu 32 nam → 75% + trợ cấp 2 năm vượt', () => {
+  const r = tinhLuongHuu('nu', [P(2025, 1, 2056, 12, 10000)]);
+  assert.equal(r.tyLe, 75); assert.equal(r.luongHuu, 7500000);
+  assert.equal(r.namVuot, 2); assert.equal(r.troCapMotLan, 10000000);
+});
+
+test('pension: floor at mức tham chiếu for ≥ 20 năm', () => {
+  const r = tinhLuongHuu('nam', [P(2025, 1, 2044, 12, 1000)]);
+  assert.equal(r.luongHuu, 2530000); assert.equal(r.apSan, true);
+});
+
+test('pension: row order does not matter', () => {
+  const a = [P(2010, 1, 2010, 12, 5000), P(2024, 1, 2038, 12, 10000)];
+  assert.deepEqual(tinhLuongHuu('nam', a), tinhLuongHuu('nam', [...a].reverse()));
 });
