@@ -1,6 +1,6 @@
 import {
   validateRows, parseSavedState, parseSalaryK, parseThang,
-  tinhLuongHuu, tinhMotLan, chiTiet, duLieuMau,
+  tinhLuongHuu, tinhMotLan, chiTiet, duLieuMau, laClickBiMat,
 } from './calc.js';
 import { HE_SO_NAM_AP_DUNG, HE_SO_NGUON, MUC_THAM_CHIEU } from './data.js';
 
@@ -31,7 +31,8 @@ function storageRemove(key) {
 }
 
 let state = parseSavedState(storageGet(KEY_INPUT));
-if (state.rows.length === 0) state.rows = [{ from: '', to: '', salary: '' }];
+// Lần đầu mở trang (chưa có dữ liệu đã lưu): nạp sẵn dữ liệu mẫu để người dùng thấy ngay kết quả.
+if (state.rows.length === 0) state.rows = duLieuMau(today());
 
 function today() {
   const d = new Date();
@@ -106,12 +107,33 @@ $('#add-row').addEventListener('click', () => {
   (from ? inputs[1] : inputs[0]).focus();
 });
 
-$('#load-sample').addEventListener('click', () => {
+function napMau(rows) {
   const hasData = state.rows.some((r) => r.from.trim() || r.to.trim() || r.salary.trim());
-  if (hasData && !confirm('Thay dữ liệu đang nhập bằng dữ liệu mẫu (mức đóng cao nhất từ 01/2007)?')) return;
-  state.rows = duLieuMau(today());
+  if (hasData && !confirm('Thay dữ liệu đang nhập bằng dữ liệu mẫu?')) return;
+  state.rows = rows.map((r) => ({ ...r }));
   renderRows();
   update();
+}
+
+// Nhấn 1 lần: mẫu công khai. Nhấn 3 lần trong 1 giây: dữ liệu riêng trong js/secret-data.js
+// (file chỉ có trên máy chủ dự án, không có trên trang công khai → khi đó nạp mẫu công khai).
+let sampleClicks = [];
+let sampleTimer = null;
+$('#load-sample').addEventListener('click', () => {
+  const now = Date.now();
+  sampleClicks = [...sampleClicks.filter((t) => now - t <= 1000), now];
+  clearTimeout(sampleTimer);
+  if (laClickBiMat(sampleClicks)) {
+    sampleClicks = [];
+    import('./secret-data.js')
+      .then((m) => napMau(m.DU_LIEU_BI_MAT))
+      .catch(() => napMau(duLieuMau(today())));
+    return;
+  }
+  sampleTimer = setTimeout(() => {
+    sampleClicks = [];
+    napMau(duLieuMau(today()));
+  }, 450);
 });
 
 $('#clear-all').addEventListener('click', () => {

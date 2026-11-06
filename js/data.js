@@ -28,10 +28,12 @@ export const TY_LE_DONG = [
 // Mức tham chiếu = mức lương cơ sở (Nghị định 161/2026/NĐ-CP, từ 01/7/2026).
 export const MUC_THAM_CHIEU = 2530000;
 
-// Lương tối thiểu chung / lương cơ sở (nghìn đồng) theo thời điểm, dùng để tạo dữ liệu mẫu
-// với mức đóng cao nhất = 20 lần mức này. Thêm dòng mới khi lương cơ sở thay đổi.
+
+// Lương tối thiểu chung / lương cơ sở (nghìn đồng) theo thời điểm, dùng để tạo dữ liệu mẫu công khai
+// với mức đóng BHXH cao nhất = 20 lần mức này. Thêm dòng mới khi lương cơ sở thay đổi.
 export const LUONG_CO_SO = [
-  { tu: { y: 2007, m: 1 }, k: 450 },   // NĐ 94/2006 (từ 10/2006)
+  { tu: { y: 2005, m: 10 }, k: 350 },  // NĐ 118/2005
+  { tu: { y: 2006, m: 10 }, k: 450 },  // NĐ 94/2006
   { tu: { y: 2008, m: 1 }, k: 540 },   // NĐ 166/2007
   { tu: { y: 2009, m: 5 }, k: 650 },   // NĐ 33/2009
   { tu: { y: 2010, m: 5 }, k: 730 },   // NĐ 28/2010

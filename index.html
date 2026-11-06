@@ -5,26 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tính lương hưu BHXH</title>
   <meta name="description" content="Ước tính lương hưu và tiền rút BHXH một lần từ quá trình đóng BHXH (chỉ tham khảo).">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/theme.js"></script>
 </head>
 <body>
-  <main class="wrap">
-    <header>
-      <h1>Ước tính lương hưu &amp; BHXH một lần</h1>
-      <p class="sub">Dành cho người lao động đóng BHXH bắt buộc tại doanh nghiệp, theo Luật BHXH 2024.</p>
-    </header>
-
-    <div class="disclaimer" role="note">
-      Kết quả chỉ mang tính tham khảo, không đảm bảo chính xác và không tư vấn bất kỳ phương án nào. Số liệu chính thức do cơ quan BHXH xác định.
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./" aria-label="Tính lương hưu – trang chủ">
+        <img src="img/logo.svg" alt="" width="32" height="32">
+        <span>Tính lương hưu</span>
+      </a>
+      <nav class="topnav">
+        <a href="#input-title">Nhập liệu</a>
+        <a href="#results-title">Kết quả</a>
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Đổi theme"></button>
+        <a class="pill-outline" href="https://github.com/haison8x/bhxh">Mã nguồn</a>
+      </nav>
     </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <span class="badge"><i></i>Theo Luật BHXH 2024</span>
+      <h1>Ước tính <span class="grad">lương hưu</span> &amp; <span class="grad">BHXH một lần</span></h1>
+      <p class="sub">Dành cho người lao động đóng BHXH bắt buộc tại doanh nghiệp. Nhập quá trình đóng từ app VssID, xem ngay kết quả.</p>
+      <div class="disclaimer" role="note">
+        Kết quả chỉ mang tính tham khảo, không đảm bảo chính xác và không tư vấn bất kỳ phương án nào. Số liệu chính thức do cơ quan BHXH xác định.
+      </div>
+    </section>
 
     <section class="card" aria-labelledby="input-title">
-      <h2 id="input-title">Quá trình đóng BHXH</h2>
+      <h2 id="input-title"><span class="step">1</span>Quá trình đóng BHXH</h2>
 
       <fieldset class="gender">
         <legend>Giới tính</legend>
-        <label><input type="radio" name="gender" value="nam" checked> Nam</label>
-        <label><input type="radio" name="gender" value="nu"> Nữ</label>
+        <div class="segmented">
+          <label><input type="radio" name="gender" value="nam" checked><span>Nam</span></label>
+          <label><input type="radio" name="gender" value="nu"><span>Nữ</span></label>
+        </div>
       </fieldset>
 
       <details class="guide">
@@ -47,7 +69,8 @@
       <ul id="messages" class="messages" aria-live="polite"></ul>
     </section>
 
-    <section class="card results">
+    <section class="card results" aria-labelledby="results-title">
+      <h2 id="results-title"><span class="step">2</span>Kết quả</h2>
       <div class="tabs" role="tablist">
         <button type="button" role="tab" id="tab-huu" aria-controls="panel-huu" data-tab="huu">Lương hưu</button>
         <button type="button" role="tab" id="tab-motlan" aria-controls="panel-motlan" data-tab="motlan">Rút BHXH một lần</button>

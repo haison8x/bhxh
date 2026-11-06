@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2997ff"/>
+      <stop offset="1" stop-color="#0071e3"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7.5" fill="url(#g)"/>
+  <!-- chồng đồng xu -->
+  <rect x="8" y="21" width="16" height="4" rx="2" fill="#fff"/>
+  <rect x="9.5" y="16.5" width="13" height="4" rx="2" fill="#fff" fill-opacity=".8"/>
+  <!-- mầm cây -->
+  <path d="M16 16.5V10.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M16 11.5c0-2.8 2.1-4.5 5-4.5 0 2.8-2.1 4.5-5 4.5z" fill="#fff"/>
+  <path d="M16 13c0-2.2-1.7-3.6-4-3.6 0 2.2 1.7 3.6 4 3.6z" fill="#fff" fill-opacity=".8"/>
+</svg>

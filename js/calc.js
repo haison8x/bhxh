@@ -235,20 +235,30 @@ export function tinhMotLan(periods) {
   };
 }
 
+
 // ---------- Dữ liệu mẫu ----------
 
 const fmtThang = ({ y, m }) => `${String(m).padStart(2, '0')}/${y}`;
 
-// Quá trình đóng mẫu với mức đóng cao nhất (20 lần lương cơ sở) từ 01/2007 đến tháng trước `today`.
+// Quá trình đóng mẫu tròn 20 năm, kết thúc ở tháng trước `today`, mỗi giai đoạn đóng ở mức cao nhất
+// (20 lần lương cơ sở), đổi mức đúng tháng lương cơ sở thay đổi.
 export function duLieuMau(today) {
   const cuoi = idx(today) - 1;
+  const dau = cuoi - 239;
   const rows = [];
   LUONG_CO_SO.forEach((r, k) => {
-    const dau = idx(r.tu);
-    if (dau > cuoi) return;
     const next = LUONG_CO_SO[k + 1];
-    const het = next ? Math.min(idx(next.tu) - 1, cuoi) : cuoi;
-    rows.push({ from: fmtThang(r.tu), to: fmtThang(fromIdx(het)), salary: String(20 * r.k) });
+    const tu = Math.max(idx(r.tu), dau);
+    const den = Math.min(next ? idx(next.tu) - 1 : cuoi, cuoi);
+    if (tu > den) return;
+    rows.push({ from: fmtThang(fromIdx(tu)), to: fmtThang(fromIdx(den)), salary: String(20 * r.k) });
   });
   return rows;
+}
+
+// true nếu 3 lần nhấn gần nhất nằm trong 1 giây (thời điểm tính bằng ms).
+export function laClickBiMat(times) {
+  if (times.length < 3) return false;
+  const last3 = times.slice(-3);
+  return last3[2] - last3[0] <= 1000;
 }

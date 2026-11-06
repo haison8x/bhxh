@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import {
   heSo, tyLeDong, quyDoiNam, expandMonths,
   parseSalaryK, parseThang, validateRows, parseSavedState,
-  binhQuan, thongKeDong, chiTiet, tinhLuongHuu, tinhMotLan, duLieuMau,
+  binhQuan, thongKeDong, chiTiet, tinhLuongHuu, tinhMotLan, duLieuMau, laClickBiMat,
 } from '../js/calc.js';
+
 
 test('heSo', () => {
   assert.equal(heSo(1990), 5.81); assert.equal(heSo(1995), 4.91);
@@ -224,25 +225,31 @@ test('mot lan: reports total months of average salary', () => {
 
 // ---------- Dữ liệu mẫu ----------
 
-test('duLieuMau: mức đóng cao nhất từ 01/2007 đến tháng trước, liền mạch, không lỗi/cảnh báo', () => {
+test('duLieuMau: tròn 20 năm mức đóng cao nhất, kết thúc tháng trước, không lỗi/cảnh báo', () => {
   const rows = duLieuMau(T);
-  assert.equal(rows[0].from, '01/2007');
+  assert.equal(rows[0].from, '11/2006');
   assert.equal(rows[0].salary, '9000');
   assert.equal(rows.at(-1).to, '10/2026');
   assert.equal(rows.at(-1).salary, '50600');
   const r = validateRows(rows, T);
   assert.deepEqual(r.errors, []); assert.deepEqual(r.warnings, []);
-  const months = expandMonths(r.periods);
-  assert.equal(months.length, (2026 - 2007) * 12 + 10);
+  assert.equal(expandMonths(r.periods).length, 240);
 });
 
-test('duLieuMau: 20 × lương cơ sở 2.340.000 cho 07/2024–06/2026', () => {
-  const row = duLieuMau(T).find(x => x.from === '07/2024');
-  assert.deepEqual(row, { from: '07/2024', to: '06/2026', salary: '46800' });
+test('duLieuMau: mức trần đổi đúng tháng tăng lương cơ sở', () => {
+  assert.deepEqual(duLieuMau(T).find(x => x.from === '07/2024'), { from: '07/2024', to: '06/2026', salary: '46800' });
 });
 
-test('duLieuMau: cuts off rows that start after today', () => {
-  const rows = duLieuMau({ y: 2026, m: 3 });
-  assert.equal(rows.at(-1).to, '02/2026');
-  assert.equal(rows.at(-1).salary, '46800');
+test('duLieuMau: cửa sổ 20 năm trượt theo ngày hiện tại', () => {
+  const rows = duLieuMau({ y: 2027, m: 3 });
+  assert.equal(rows[0].from, '03/2007');
+  assert.equal(rows.at(-1).to, '02/2027');
+  assert.equal(expandMonths(validateRows(rows, { y: 2027, m: 3 }).periods).length, 240);
+});
+
+test('laClickBiMat: 3 lần trong 1 giây', () => {
+  assert.equal(laClickBiMat([0, 300, 700]), true);
+  assert.equal(laClickBiMat([0, 600, 1200]), false);
+  assert.equal(laClickBiMat([0, 400]), false);
+  assert.equal(laClickBiMat([0, 2000, 2300, 2600]), true);
 });
