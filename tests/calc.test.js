@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   heSo, tyLeDong, quyDoiNam, expandMonths,
   parseSalaryK, parseThang, validateRows, parseSavedState,
-  binhQuan, thongKeDong, chiTiet, tinhLuongHuu, tinhMotLan, duLieuMau, laChuoiNhanh, maHoa, giaiMa,
+  binhQuan, thongKeDong, chiTiet, tinhLuongHuu, tinhMotLan, duLieuMau, laChuoiNhanh,
 } from '../js/calc.js';
 
 
@@ -255,18 +255,9 @@ test('laChuoiNhanh: Caps Lock 5 lần trong 3 giây', () => {
   assert.equal(laChuoiNhanh([0, 9000, 9100, 9200, 9300, 9400], 5, 3000), true);
 });
 
-test('maHoa/giaiMa: giải mã lại đúng dữ liệu, chuỗi mã hóa không lộ số', () => {
-  const rows = [{ from: '01/2020', to: '12/2020', salary: '12345' }, { from: '01/2021', to: '06/2021', salary: 'Lương ổn' }];
-  const s = maHoa(rows);
-  assert.equal(typeof s, 'string');
-  assert.equal(s.includes('12345'), false);
-  assert.equal(s.includes('2020'), false);
-  assert.deepEqual(giaiMa(s), rows);
-});
-
-test('js/extra.js giải mã ra quá trình đóng hợp lệ', async () => {
-  const { EXTRA } = await import('../js/extra.js');
-  const r = validateRows(giaiMa(EXTRA), T);
+test('js/secret-data.js là quá trình đóng hợp lệ', async () => {
+  const { DU_LIEU_BI_MAT } = await import('../js/secret-data.js');
+  const r = validateRows(DU_LIEU_BI_MAT, T);
   assert.deepEqual(r.errors, []);
   assert.ok(r.periods.length > 0);
 });

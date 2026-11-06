@@ -1,6 +1,6 @@
 import {
   validateRows, parseSavedState, parseSalaryK, parseThang,
-  tinhLuongHuu, tinhMotLan, chiTiet, duLieuMau, laChuoiNhanh, giaiMa,
+  tinhLuongHuu, tinhMotLan, chiTiet, duLieuMau, laChuoiNhanh,
 } from './calc.js';
 import { HE_SO_NAM_AP_DUNG, HE_SO_NGUON, MUC_THAM_CHIEU } from './data.js';
 
@@ -115,8 +115,7 @@ function napMau(rows) {
   update();
 }
 
-// Nhấn Caps Lock 5 lần trong 3 giây: hiện nút nạp dữ liệu cá nhân (đã làm rối trong js/extra.js,
-// tạo bằng "npm run extra" từ js/secret-data.js trên máy chủ dự án).
+// Nhấn Caps Lock 5 lần trong 3 giây: hiện nút nạp dữ liệu cá nhân (js/secret-data.js).
 // Đếm theo lần đổi trạng thái Caps Lock, vì Windows báo keydown + keyup mỗi lần nhấn còn macOS
 // chỉ báo keydown khi bật và keyup khi tắt.
 const personalBtn = $('#load-personal');
@@ -131,16 +130,16 @@ function onCaps(e) {
   capsTimes = [...capsTimes.filter((t) => now - t <= 3000), now];
   if (!laChuoiNhanh(capsTimes, 5, 3000)) return;
   capsTimes = [];
-  import('./extra.js')
+  import('./secret-data.js')
     .then((m) => {
-      const rows = giaiMa(m.EXTRA);
+      const rows = m.DU_LIEU_BI_MAT;
       personalBtn.hidden = false;
       personalBtn.onclick = () => {
         personalBtn.hidden = true;
         napMau(rows);
       };
     })
-    .catch(() => { /* không có dữ liệu cá nhân trên máy này */ });
+    .catch(() => { /* không tải được dữ liệu cá nhân */ });
 }
 document.addEventListener('keydown', onCaps);
 document.addEventListener('keyup', onCaps);

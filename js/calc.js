@@ -263,24 +263,3 @@ export function laChuoiNhanh(times, soLan, trongMs) {
   return gan[gan.length - 1] - gan[0] <= trongMs;
 }
 
-// ---------- Làm rối dữ liệu (chỉ để không lộ khi xem lướt, KHÔNG phải mã hóa an toàn) ----------
-
-const KHOA = 'bhxh-son';
-
-function xor(bytes) {
-  const k = new TextEncoder().encode(KHOA);
-  return bytes.map((b, i) => b ^ k[i % k.length]);
-}
-
-export function maHoa(data) {
-  const bytes = xor(new TextEncoder().encode(JSON.stringify(data)));
-  let bin = '';
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin);
-}
-
-export function giaiMa(text) {
-  const bin = atob(text);
-  const bytes = xor(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
