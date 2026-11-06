@@ -42,7 +42,8 @@ export function parseSalaryK(text) {
 }
 
 export function parseThang(text) {
-  const mt = /^\s*(\d{1,2})\/(\d{4})\s*$/.exec(String(text ?? ''));
+  // Chấp nhận mọi dấu phân cách hoặc không có (bàn phím số trên iPhone không có "/").
+  const mt = /^\s*(\d{1,2})\D*(\d{4})\s*$/.exec(String(text ?? ''));
   if (!mt) return null;
   const m = Number(mt[1]);
   const y = Number(mt[2]);
@@ -67,7 +68,7 @@ export function validateRows(rows, today) {
     const from = parseThang(r.from);
     const to = parseThang(r.to);
     if (!from || !to) {
-      errors.push({ row: i, message: `Dòng ${i}: tháng không hợp lệ (nhập dạng MM/YYYY).` });
+      errors.push({ row: i, message: `Dòng ${i}: tháng không hợp lệ (nhập dạng MM/YYYY hoặc MMYYYY).` });
       return;
     }
     if (idx(to) < idx(from)) {
@@ -82,6 +83,9 @@ export function validateRows(rows, today) {
     if (salaryK * 1000 > 20 * MUC_THAM_CHIEU) {
       warnings.push({ row: i, message: `Dòng ${i}: mức lương có vẻ quá cao — nhập theo nghìn đồng (15 triệu → 15000).` });
     }
+    if (salaryK < 1000) {
+      warnings.push({ row: i, message: `Dòng ${i}: mức lương có vẻ quá thấp — nhập theo nghìn đồng (15 triệu → 15000).` });
+    }
     if (idx(to) > idx(today)) {
       warnings.push({ row: i, message: `Dòng ${i}: có tháng sau tháng hiện tại, vẫn được tính.` });
     }
@@ -94,7 +98,7 @@ export function validateRows(rows, today) {
     const cur = sorted[k];
     if (idx(cur.period.from) <= idx(prev.period.to)) {
       const [a, b] = [prev.row, cur.row].sort((x, y) => x - y);
-      errors.push({ row: a, message: `Dòng ${a} và dòng ${b} bị trùng thời gian.` });
+      errors.push({ row: a, rows: [a, b], message: `Dòng ${a} và dòng ${b} bị trùng thời gian.` });
     }
   }
 
@@ -139,19 +143,30 @@ export function thongKeDong(months) {
 export function chiTiet(periods) {
   const rows = [];
   const sorted = [...periods].sort((a, b) => idx(a.from) - idx(b.from));
+  // Tách mỗi giai đoạn theo năm dương lịch (hệ số theo năm) và theo mốc đổi tỷ lệ đóng.
   for (const p of sorted) {
-    for (let y = p.from.y; y <= p.to.y; y++) {
-      const tu = y === p.from.y ? p.from : { y, m: 1 };
-      const den = y === p.to.y ? p.to : { y, m: 12 };
-      const months = expandMonths([{ from: tu, to: den, salaryK: p.salaryK }]);
-      const luong = p.salaryK * 1000;
-      const hs = heSo(y);
-      const tk = thongKeDong(months);
-      rows.push({
-        tu, den, soThang: months.length, luong, heSo: hs,
-        luongDieuChinh: Math.round(luong * hs), nld: tk.nld, cty: tk.cty,
-      });
+    const luong = p.salaryK * 1000;
+    let group = null;
+    for (let i = idx(p.from); i <= idx(p.to); i++) {
+      const t = fromIdx(i);
+      const r = tyLeDong(t.y, t.m);
+      if (!group || group.tu.y !== t.y || group.tyLeNld !== r.nld || group.tyLeCty !== r.cty) {
+        const hs = heSo(t.y);
+        group = {
+          tu: t, den: t, soThang: 0, luong, heSo: hs, luongDieuChinh: Math.round(luong * hs),
+          tyLeNld: r.nld, tyLeCty: r.cty, nld: 0, cty: 0,
+        };
+        rows.push(group);
+      }
+      group.den = t;
+      group.soThang += 1;
+      group.nld += (luong * r.nld) / 100;
+      group.cty += (luong * r.cty) / 100;
     }
+  }
+  for (const g of rows) {
+    g.nld = Math.round(g.nld);
+    g.cty = Math.round(g.cty);
   }
   return rows;
 }

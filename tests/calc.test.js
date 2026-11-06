@@ -163,3 +163,33 @@ test('mot lan: under 12 months capped at 2 × bình quân', () => {
 test('mot lan: exactly 12 months from 2025 = 2 × bq', () => {
   assert.equal(tinhMotLan([P(2025, 1, 2025, 12, 10000)]).soTien, 20000000);
 });
+
+// ---------- Final review fixes ----------
+
+test('parseThang accepts other separators and bare digits (iOS numeric keypad)', () => {
+  assert.deepEqual(parseThang('122020'), { y: 2020, m: 12 });
+  assert.deepEqual(parseThang('12.2020'), { y: 2020, m: 12 });
+  assert.deepEqual(parseThang('12-2020'), { y: 2020, m: 12 });
+  assert.deepEqual(parseThang('1 2020'), { y: 2020, m: 1 });
+  assert.equal(parseThang('2020'), null);
+});
+
+test('validateRows: warning when salary looks typed in millions', () => {
+  const r = validateRows([{ from: '01/2020', to: '12/2020', salary: '15' }], T);
+  assert.equal(r.errors.length, 0);
+  assert.deepEqual(r.warnings.map(w => w.message),
+    ['Dòng 1: mức lương có vẻ quá thấp — nhập theo nghìn đồng (15 triệu → 15000).']);
+});
+
+test('chiTiet splits at contribution-rate changes and reports the rates', () => {
+  const r = chiTiet([P(2017, 1, 2017, 12, 10000)]);
+  assert.deepEqual(r.map(x => [x.tu.m, x.den.m, x.tyLeNld, x.tyLeCty, x.nld, x.cty]),
+    [[1, 5, 8, 18, 4000000, 9000000], [6, 12, 8, 17, 5600000, 11900000]]);
+});
+
+test('validateRows: overlap error lists both rows for highlighting', () => {
+  const r = validateRows([
+    { from: '01/2020', to: '12/2020', salary: '10000' },
+    { from: '06/2020', to: '12/2021', salary: '12000' }], T);
+  assert.deepEqual(r.errors[0].rows, [1, 2]);
+});

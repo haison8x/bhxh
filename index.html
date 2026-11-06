@@ -34,7 +34,7 @@
       <p class="scope">Chỉ nhập các giai đoạn đóng BHXH bắt buộc tại doanh nghiệp. Nếu có giai đoạn tự nguyện hoặc khu vực nhà nước, kết quả sẽ sai lệch.</p>
 
       <div class="rows-head" aria-hidden="true">
-        <span>Từ tháng</span><span>Đến tháng</span><span>Mức lương (nghìn đồng)</span><span></span>
+        <span>#</span><span>Từ tháng</span><span>Đến tháng</span><span>Mức lương (nghìn đồng)</span><span></span>
       </div>
       <div id="rows"></div>
 
@@ -63,6 +63,7 @@
 
   <template id="row-tpl">
     <div class="row">
+      <span class="no"></span>
       <label><span class="lbl">Từ tháng</span><input class="from" placeholder="MM/YYYY" inputmode="numeric" autocomplete="off"></label>
       <label><span class="lbl">Đến tháng</span><input class="to" placeholder="MM/YYYY" inputmode="numeric" autocomplete="off"></label>
       <label class="salary-cell"><span class="lbl">Mức lương (nghìn đồng)</span><input class="salary" placeholder="vd 15000" inputmode="numeric" autocomplete="off"><small class="preview"></small></label>

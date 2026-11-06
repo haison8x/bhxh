@@ -50,6 +50,7 @@ function renderRows() {
   state.rows.forEach((r, i) => {
     const el = tpl.content.firstElementChild.cloneNode(true);
     el.dataset.index = String(i);
+    el.querySelector('.no').textContent = String(i + 1);
     el.querySelector('.from').value = r.from;
     el.querySelector('.to').value = r.to;
     el.querySelector('.salary').value = r.salary;
@@ -66,6 +67,17 @@ rowsEl.addEventListener('input', (e) => {
     if (e.target.classList.contains(f)) r[f] = e.target.value;
   }
   if (e.target.classList.contains('salary')) updatePreview(rowEl, e.target.value);
+  update();
+});
+
+// Chuẩn hóa tháng về dạng MM/YYYY khi rời ô (vd "122020" → "12/2020").
+rowsEl.addEventListener('focusout', (e) => {
+  if (!e.target.matches('.from, .to')) return;
+  const t = parseThang(e.target.value);
+  if (!t || e.target.value === thang(t)) return;
+  e.target.value = thang(t);
+  const r = state.rows[Number(e.target.closest('.row').dataset.index)];
+  r[e.target.classList.contains('from') ? 'from' : 'to'] = e.target.value;
   update();
 });
 
@@ -122,7 +134,6 @@ function selectTab(name) {
   for (const btn of document.querySelectorAll('[role="tab"]')) {
     const on = btn.dataset.tab === name;
     btn.setAttribute('aria-selected', String(on));
-    btn.tabIndex = on ? 0 : -1;
   }
   for (const [k, p] of Object.entries(panels)) p.hidden = k !== name;
   storageSet(KEY_TAB, name);
@@ -152,7 +163,7 @@ function detailHtml(periods) {
     <tr>
       <td>${thang(r.tu)}</td><td>${thang(r.den)}</td><td>${r.soThang}</td>
       <td>${nf.format(r.luong)}</td><td>${nf.format(r.heSo)}</td><td>${nf.format(r.luongDieuChinh)}</td>
-      <td>${nf.format(r.nld)}</td><td>${nf.format(r.cty)}</td>
+      <td>${r.tyLeNld}% / ${r.tyLeCty}%</td><td>${nf.format(r.nld)}</td><td>${nf.format(r.cty)}</td>
     </tr>`).join('');
   return `
     <h3>Chi tiết từng giai đoạn</h3>
@@ -160,7 +171,7 @@ function detailHtml(periods) {
       <table>
         <thead><tr>
           <th>Từ</th><th>Đến</th><th>Số tháng</th><th>Lương (đ)</th><th>Hệ số</th>
-          <th>Lương sau điều chỉnh (đ)</th><th>NLĐ đóng (đ)</th><th>Công ty đóng (đ)</th>
+          <th>Lương sau điều chỉnh (đ)</th><th>Tỷ lệ đóng NLĐ / Cty</th><th>NLĐ đóng (đ)</th><th>Công ty đóng (đ)</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -219,10 +230,23 @@ function renderMessages(errors, warnings) {
   );
 }
 
+function markInvalidRows(errors) {
+  const bad = new Set();
+  for (const e of errors) {
+    for (const row of e.rows ?? [e.row]) bad.add(row - 1);
+  }
+  rowsEl.querySelectorAll('.row').forEach((el) => {
+    const on = bad.has(Number(el.dataset.index));
+    el.classList.toggle('invalid', on);
+    for (const input of el.querySelectorAll('input')) input.setAttribute('aria-invalid', String(on));
+  });
+}
+
 function update() {
   storageSet(KEY_INPUT, JSON.stringify(state));
   const { periods, errors, warnings } = validateRows(state.rows, today());
   renderMessages(errors, warnings);
+  markInvalidRows(errors);
   if (errors.length > 0) {
     for (const p of Object.values(panels)) p.innerHTML = '<p class="empty">Sửa lỗi ở trên để xem kết quả.</p>';
     return;

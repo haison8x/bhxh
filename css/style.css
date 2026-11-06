@@ -69,10 +69,13 @@ a { color: var(--accent); }
 
 .rows-head, .row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.4fr 40px;
+  grid-template-columns: 28px 1fr 1fr 1.4fr 40px;
   gap: 8px;
   align-items: start;
 }
+.row .no { padding-top: 9px; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+.row.invalid input { border-color: var(--err-text); }
+.row.invalid .no { color: var(--err-text); }
 .rows-head { font-size: 0.85rem; color: var(--muted); padding-bottom: 4px; }
 .row { margin-bottom: 8px; }
 .row .lbl { display: none; }
@@ -137,6 +140,9 @@ footer { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 8
     grid-template-columns: 1fr 1fr 40px;
     border: 1px solid var(--border); border-radius: 8px; padding: 8px;
   }
+  .row.invalid { border-color: var(--err-text); }
+  .row .no { grid-column: 1 / 3; padding-top: 0; }
+  .row .no::before { content: "Dòng "; }
   .row .lbl { display: block; font-size: 0.8rem; color: var(--muted); }
   .row .salary-cell { grid-column: 1 / 3; }
   .row .del { grid-column: 3; grid-row: 1; }
