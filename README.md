@@ -31,7 +31,7 @@ python -m http.server 8000
 
 ## Kiểm thử
 
-Cần Node 20 trở lên, không cần cài thêm gói nào:
+Cần Node 22 trở lên, không cần cài thêm gói nào:
 
 ```bash
 npm test

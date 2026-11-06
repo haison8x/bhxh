@@ -1,6 +1,6 @@
 import {
   validateRows, parseSavedState, parseSalaryK, parseThang,
-  tinhLuongHuu, tinhMotLan, chiTiet,
+  tinhLuongHuu, tinhMotLan, chiTiet, duLieuMau,
 } from './calc.js';
 import { HE_SO_NAM_AP_DUNG, HE_SO_NGUON, MUC_THAM_CHIEU } from './data.js';
 
@@ -106,9 +106,19 @@ $('#add-row').addEventListener('click', () => {
   (from ? inputs[1] : inputs[0]).focus();
 });
 
+$('#load-sample').addEventListener('click', () => {
+  const hasData = state.rows.some((r) => r.from.trim() || r.to.trim() || r.salary.trim());
+  if (hasData && !confirm('Thay dữ liệu đang nhập bằng dữ liệu mẫu (mức đóng cao nhất từ 01/2007)?')) return;
+  state.rows = duLieuMau(today());
+  renderRows();
+  update();
+});
+
 $('#clear-all').addEventListener('click', () => {
   if (!confirm('Xóa toàn bộ dữ liệu đã nhập?')) return;
   storageRemove(KEY_INPUT);
+  storageRemove(KEY_TAB);
+  selectTab('huu');
   state = { gender: 'nam', rows: [{ from: '', to: '', salary: '' }] };
   syncGender();
   renderRows();
@@ -209,6 +219,7 @@ function renderMotLan(periods) {
     : `<div class="facts">
          ${fact('Số năm đóng trước 2014', `${nam(r.namTruoc2014)} năm × 1,5 tháng`)}
          ${fact('Số năm đóng từ 2014', `${nam(r.namTu2014)} năm × 2 tháng`)}
+         ${fact('Tổng số tháng bình quân được nhận', `${nam(r.soThangHuong)} tháng`)}
        </div>`;
   panels.motlan.innerHTML = `
     <p class="headline-label">Số tiền rút BHXH một lần (ước tính)</p>

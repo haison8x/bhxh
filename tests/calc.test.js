@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   heSo, tyLeDong, quyDoiNam, expandMonths,
   parseSalaryK, parseThang, validateRows, parseSavedState,
-  binhQuan, thongKeDong, chiTiet, tinhLuongHuu, tinhMotLan,
+  binhQuan, thongKeDong, chiTiet, tinhLuongHuu, tinhMotLan, duLieuMau,
 } from '../js/calc.js';
 
 test('heSo', () => {
@@ -192,4 +192,57 @@ test('validateRows: overlap error lists both rows for highlighting', () => {
     { from: '01/2020', to: '12/2020', salary: '10000' },
     { from: '06/2020', to: '12/2021', salary: '12000' }], T);
   assert.deepEqual(r.errors[0].rows, [1, 2]);
+});
+
+// ---------- Deferred minors ----------
+
+test('validateRows: exact warning text for salary typed in full đồng', () => {
+  const r = validateRows([{ from: '01/2020', to: '12/2020', salary: '15000000' }], T);
+  assert.deepEqual(r.warnings.map(w => w.message),
+    ['Dòng 1: mức lương có vẻ quá cao — nhập theo nghìn đồng (15 triệu → 15000).']);
+});
+
+test('parseSalaryK rejects decimals, keeps thousand separators', () => {
+  assert.equal(parseSalaryK('15.5'), null);
+  assert.equal(parseSalaryK('15,25'), null);
+  assert.equal(parseSalaryK('1.500.000'), 1500000);
+  assert.equal(parseSalaryK('15.000'), 15000);
+});
+
+test('validateRows: reports every row overlapping an earlier long row', () => {
+  const r = validateRows([
+    { from: '01/2010', to: '12/2020', salary: '10000' },
+    { from: '01/2012', to: '12/2013', salary: '10000' },
+    { from: '01/2015', to: '12/2016', salary: '10000' }], T);
+  assert.deepEqual(r.errors.map(e => e.rows), [[1, 2], [1, 3]]);
+});
+
+test('mot lan: reports total months of average salary', () => {
+  assert.equal(tinhMotLan([P(2012, 7, 2015, 3, 10000)]).soThangHuong, 5.5);
+  assert.equal(tinhMotLan([P(2025, 1, 2025, 6, 10000)]).soThangHuong, null);
+});
+
+// ---------- Dữ liệu mẫu ----------
+
+test('duLieuMau: mức đóng cao nhất từ 01/2007 đến tháng trước, liền mạch, không lỗi/cảnh báo', () => {
+  const rows = duLieuMau(T);
+  assert.equal(rows[0].from, '01/2007');
+  assert.equal(rows[0].salary, '9000');
+  assert.equal(rows.at(-1).to, '10/2026');
+  assert.equal(rows.at(-1).salary, '50600');
+  const r = validateRows(rows, T);
+  assert.deepEqual(r.errors, []); assert.deepEqual(r.warnings, []);
+  const months = expandMonths(r.periods);
+  assert.equal(months.length, (2026 - 2007) * 12 + 10);
+});
+
+test('duLieuMau: 20 × lương cơ sở 2.340.000 cho 07/2024–06/2026', () => {
+  const row = duLieuMau(T).find(x => x.from === '07/2024');
+  assert.deepEqual(row, { from: '07/2024', to: '06/2026', salary: '46800' });
+});
+
+test('duLieuMau: cuts off rows that start after today', () => {
+  const rows = duLieuMau({ y: 2026, m: 3 });
+  assert.equal(rows.at(-1).to, '02/2026');
+  assert.equal(rows.at(-1).salary, '46800');
 });

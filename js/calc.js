@@ -1,4 +1,4 @@
-import { HE_SO_TRUOT_GIA, TY_LE_DONG, MUC_THAM_CHIEU } from './data.js';
+import { HE_SO_TRUOT_GIA, TY_LE_DONG, MUC_THAM_CHIEU, LUONG_CO_SO } from './data.js';
 
 const idx = ({ y, m }) => y * 12 + (m - 1);
 const fromIdx = (i) => ({ y: Math.floor(i / 12), m: (i % 12) + 1 });
@@ -35,8 +35,10 @@ export function expandMonths(periods) {
 // ---------- Nhập liệu ----------
 
 export function parseSalaryK(text) {
-  const s = String(text ?? '').replace(/[\s.,]/g, '');
-  if (!/^\d+$/.test(s)) return null;
+  const raw = String(text ?? '').replace(/\s/g, '');
+  // Dấu . hoặc , chỉ được dùng để phân cách hàng nghìn (15.000), không nhận số thập phân (15.5).
+  if (!/^\d+$/.test(raw) && !/^\d{1,3}([.,]\d{3})+$/.test(raw)) return null;
+  const s = raw.replace(/[.,]/g, '');
   const n = Number(s);
   return n > 0 ? n : null;
 }
@@ -93,13 +95,14 @@ export function validateRows(rows, today) {
   });
 
   const sorted = [...parsed].sort((a, b) => idx(a.period.from) - idx(b.period.from));
-  for (let k = 1; k < sorted.length; k++) {
-    const prev = sorted[k - 1];
-    const cur = sorted[k];
-    if (idx(cur.period.from) <= idx(prev.period.to)) {
-      const [a, b] = [prev.row, cur.row].sort((x, y) => x - y);
+  // So mỗi dòng với dòng kết thúc muộn nhất trước nó, để không bỏ sót cặp trùng nào.
+  let latest = null;
+  for (const cur of sorted) {
+    if (latest && idx(cur.period.from) <= idx(latest.period.to)) {
+      const [a, b] = [latest.row, cur.row].sort((x, y) => x - y);
       errors.push({ row: a, rows: [a, b], message: `Dòng ${a} và dòng ${b} bị trùng thời gian.` });
     }
+    if (!latest || idx(cur.period.to) > idx(latest.period.to)) latest = cur;
   }
 
   return { periods: parsed.map((p) => p.period), errors, warnings };
@@ -212,6 +215,8 @@ export function tinhMotLan(periods) {
   const moc = idx({ y: 2014, m: 1 });
   const thangTruoc2014 = months.filter((e) => idx(e) < moc).length;
   const thangTu2014 = tongThang - thangTruoc2014;
+  // Tháng lẻ của giai đoạn trước 2014 được chuyển sang giai đoạn từ 2014 (cách tính lâu nay của
+  // cơ quan BHXH; chưa tìm được điều khoản tương ứng trong Nghị định 158/2025/NĐ-CP).
   const namTruoc2014 = Math.floor(thangTruoc2014 / 12);
   const namTu2014 = quyDoiNam(thangTu2014 + (thangTruoc2014 % 12));
   const duoi12Thang = tongThang > 0 && tongThang < 12;
@@ -225,6 +230,25 @@ export function tinhMotLan(periods) {
   return {
     tongThang, binhQuan: Math.round(bq), thangTruoc2014, thangTu2014,
     namTruoc2014, namTu2014, duoi12Thang, soTien: Math.round(soTien),
+    soThangHuong: duoi12Thang ? null : 1.5 * namTruoc2014 + 2 * namTu2014,
     thongKe: thongKeDong(months),
   };
+}
+
+// ---------- Dữ liệu mẫu ----------
+
+const fmtThang = ({ y, m }) => `${String(m).padStart(2, '0')}/${y}`;
+
+// Quá trình đóng mẫu với mức đóng cao nhất (20 lần lương cơ sở) từ 01/2007 đến tháng trước `today`.
+export function duLieuMau(today) {
+  const cuoi = idx(today) - 1;
+  const rows = [];
+  LUONG_CO_SO.forEach((r, k) => {
+    const dau = idx(r.tu);
+    if (dau > cuoi) return;
+    const next = LUONG_CO_SO[k + 1];
+    const het = next ? Math.min(idx(next.tu) - 1, cuoi) : cuoi;
+    rows.push({ from: fmtThang(r.tu), to: fmtThang(fromIdx(het)), salary: String(20 * r.k) });
+  });
+  return rows;
 }
