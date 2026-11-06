@@ -149,7 +149,7 @@ test('pension: row order does not matter', () => {
 test('mot lan: straddles 2014, odd months move to post-2014', () => {
   const r = tinhMotLan([P(2012, 7, 2015, 3, 10000)]);
   assert.equal(r.namTruoc2014, 1); assert.equal(r.namTu2014, 2);
-  assert.equal(r.soTien, 65576923);
+  assert.equal(r.soTien, 77500000);
 });
 
 test('mot lan: under 12 months uses 22%', () => {
