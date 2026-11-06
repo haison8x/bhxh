@@ -256,9 +256,9 @@ export function duLieuMau(today) {
   return rows;
 }
 
-// true nếu 3 lần nhấn gần nhất nằm trong 1 giây (thời điểm tính bằng ms).
-export function laClickBiMat(times) {
-  if (times.length < 3) return false;
-  const last3 = times.slice(-3);
-  return last3[2] - last3[0] <= 1000;
+// true nếu `soLan` lần nhấn gần nhất nằm trong `trongMs` mili giây (thời điểm tính bằng ms).
+export function laChuoiNhanh(times, soLan, trongMs) {
+  if (times.length < soLan) return false;
+  const gan = times.slice(-soLan);
+  return gan[gan.length - 1] - gan[0] <= trongMs;
 }

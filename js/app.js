@@ -1,6 +1,6 @@
 import {
   validateRows, parseSavedState, parseSalaryK, parseThang,
-  tinhLuongHuu, tinhMotLan, chiTiet, duLieuMau, laClickBiMat,
+  tinhLuongHuu, tinhMotLan, chiTiet, duLieuMau, laChuoiNhanh,
 } from './calc.js';
 import { HE_SO_NAM_AP_DUNG, HE_SO_NGUON, MUC_THAM_CHIEU } from './data.js';
 
@@ -115,26 +115,32 @@ function napMau(rows) {
   update();
 }
 
-// Nhấn 1 lần: mẫu công khai. Nhấn 3 lần trong 1 giây: dữ liệu riêng trong js/secret-data.js
-// (file chỉ có trên máy chủ dự án, không có trên trang công khai → khi đó nạp mẫu công khai).
-let sampleClicks = [];
-let sampleTimer = null;
-$('#load-sample').addEventListener('click', () => {
+// Nhấn Caps Lock 5 lần trong 3 giây: nếu có js/secret-data.js (chỉ có trên máy chủ dự án, đã
+// .gitignore) thì hiện nút nạp dữ liệu cá nhân; không có file thì không hiện gì.
+// Đếm theo lần đổi trạng thái Caps Lock, vì Windows báo keydown + keyup mỗi lần nhấn còn macOS
+// chỉ báo keydown khi bật và keyup khi tắt.
+const personalBtn = $('#load-personal');
+let capsTimes = [];
+let capsState = null;
+function onCaps(e) {
+  if (e.key !== 'CapsLock' || !personalBtn.hidden) return;
+  const on = e.getModifierState('CapsLock');
+  if (on === capsState) return;
+  capsState = on;
   const now = Date.now();
-  sampleClicks = [...sampleClicks.filter((t) => now - t <= 1000), now];
-  clearTimeout(sampleTimer);
-  if (laClickBiMat(sampleClicks)) {
-    sampleClicks = [];
-    import('./secret-data.js')
-      .then((m) => napMau(m.DU_LIEU_BI_MAT))
-      .catch(() => napMau(duLieuMau(today())));
-    return;
-  }
-  sampleTimer = setTimeout(() => {
-    sampleClicks = [];
-    napMau(duLieuMau(today()));
-  }, 450);
-});
+  capsTimes = [...capsTimes.filter((t) => now - t <= 3000), now];
+  if (!laChuoiNhanh(capsTimes, 5, 3000)) return;
+  capsTimes = [];
+  import('./secret-data.js')
+    .then((m) => {
+      const rows = m.DU_LIEU_BI_MAT;
+      personalBtn.hidden = false;
+      personalBtn.onclick = () => napMau(rows);
+    })
+    .catch(() => { /* không có dữ liệu cá nhân trên máy này */ });
+}
+document.addEventListener('keydown', onCaps);
+document.addEventListener('keyup', onCaps);
 
 $('#clear-all').addEventListener('click', () => {
   if (!confirm('Xóa toàn bộ dữ liệu đã nhập?')) return;

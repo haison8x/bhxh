@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   heSo, tyLeDong, quyDoiNam, expandMonths,
   parseSalaryK, parseThang, validateRows, parseSavedState,
-  binhQuan, thongKeDong, chiTiet, tinhLuongHuu, tinhMotLan, duLieuMau, laClickBiMat,
+  binhQuan, thongKeDong, chiTiet, tinhLuongHuu, tinhMotLan, duLieuMau, laChuoiNhanh,
 } from '../js/calc.js';
 
 
@@ -247,9 +247,10 @@ test('duLieuMau: cửa sổ 20 năm trượt theo ngày hiện tại', () => {
   assert.equal(expandMonths(validateRows(rows, { y: 2027, m: 3 }).periods).length, 240);
 });
 
-test('laClickBiMat: 3 lần trong 1 giây', () => {
-  assert.equal(laClickBiMat([0, 300, 700]), true);
-  assert.equal(laClickBiMat([0, 600, 1200]), false);
-  assert.equal(laClickBiMat([0, 400]), false);
-  assert.equal(laClickBiMat([0, 2000, 2300, 2600]), true);
+test('laChuoiNhanh: Caps Lock 5 lần trong 3 giây', () => {
+  assert.equal(laChuoiNhanh([0, 500, 1000, 1500, 2000], 5, 3000), true);
+  assert.equal(laChuoiNhanh([0, 700, 1400, 2100, 3000], 5, 3000), true);
+  assert.equal(laChuoiNhanh([0, 800, 1600, 2400, 3200], 5, 3000), false);
+  assert.equal(laChuoiNhanh([0, 100, 200, 300], 5, 3000), false);
+  assert.equal(laChuoiNhanh([0, 9000, 9100, 9200, 9300, 9400], 5, 3000), true);
 });
